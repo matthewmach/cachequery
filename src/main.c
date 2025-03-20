@@ -14,6 +14,7 @@
 #include <linux/mm.h>
 #include <linux/vmalloc.h>
 #include <linux/sched.h>
+#include <linux/kobject.h>
 
 #include "../include/msrdrv.h"
 #include "../include/parser.h"
@@ -247,22 +248,38 @@ static struct attribute *cacheset_default_attrs[] = {
 	NULL,
 };
 
+static struct attribute_group cacheset_default_group = {
+	.attrs = cacheset_default_attrs
+};
+
+const struct attribute_group *cacheset_default_groups = {
+	&cacheset_default_group
+};
+
 // Attributes for genereal config_kobjs
 static struct attribute *config_default_attrs[] = {
 	&conf_attribute.attr,
 	NULL,
 };
 
+static struct attribute_group config_default_group = {
+	.attrs = config_default_attrs
+};
+
+const struct attribute_group *config_default_groups = {
+	&config_default_group
+};
+
 static struct kobj_type cacheset_ktype = {
 	.sysfs_ops = &cacheset_sysfs_ops,
 	.release = cacheset_release,
-	.default_attrs = cacheset_default_attrs,
+	.default_groups = &cacheset_default_groups,
 };
 
 static struct kobj_type config_ktype = {
 	.sysfs_ops = &config_sysfs_ops,
 	.release = config_release,
-	.default_attrs = config_default_attrs,
+	.default_groups = &config_default_groups,
 };
 
 static struct cacheset_obj *create_cacheset_obj(unsigned int index, unsigned char level, struct kset *kset)

@@ -10,3 +10,4 @@ Module.symvers
 
 # vscode
 .vscode/
+mod_cachequery.mod
