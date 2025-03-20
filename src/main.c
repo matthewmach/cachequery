@@ -728,17 +728,17 @@ static int __init cachequery_init(void)
 	}
 
 	// Allocate pools
-	if (!(pool_l3 = __vmalloc (L3_POOL_SZ, GFP_KERNEL|__GFP_HIGHMEM|__GFP_COMP, PAGE_KERNEL_LARGE)))
+	if (!(pool_l3 = __vmalloc (L3_POOL_SZ, GFP_KERNEL|__GFP_HIGHMEM|__GFP_COMP)))
 	{
 		ret = -ENOMEM;
 		goto err;
 	}
-	if (!(pool_l2 = __vmalloc (L2_POOL_SZ, GFP_KERNEL|__GFP_HIGHMEM|__GFP_COMP, PAGE_KERNEL_LARGE)))
+	if (!(pool_l2 = __vmalloc (L2_POOL_SZ, GFP_KERNEL|__GFP_HIGHMEM|__GFP_COMP)))
 	{
 		ret = -ENOMEM;
 		goto clean2;
 	}
-	if (!(pool_l1 = __vmalloc (L1_POOL_SZ, GFP_KERNEL|__GFP_HIGHMEM|__GFP_COMP, PAGE_KERNEL_LARGE)))
+	if (!(pool_l1 = __vmalloc (L1_POOL_SZ, GFP_KERNEL|__GFP_HIGHMEM|__GFP_COMP)))
 	{
 		ret = -ENOMEM;
 		goto clean1;

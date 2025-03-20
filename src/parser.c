@@ -214,7 +214,7 @@ void* allocate_code_pages(struct smart_buffer *code, Block **sets, unsigned char
 
 alloc:
 	count++;
-	if (!(ret = __vmalloc (pages*PAGE_SIZE, GFP_KERNEL, PAGE_KERNEL_EXEC)))
+	if (!(ret = __vmalloc (pages*PAGE_SIZE, GFP_KERNEL)))
 	{
 		return NULL;
 	}
