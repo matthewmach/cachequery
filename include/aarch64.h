@@ -54,13 +54,54 @@
 #define MOV_ECX_DWORD(...)	C(0xb9, __VA_ARGS__)
 #define XOR_EAX_EAX()		C(0x31, 0xc0)
 #define XOR_EDX_EDX()		C(0x31, 0xd2)
+
+/*
+Reset the cycle counter
+
+// Disable PMU
+MRS X0, PMCR_EL0
+BIC X0, X0, #0x1
+MSR PMCR_EL0, X0
+
+DSB SY
+isb
+
+// Reset cycle counter
+MOV X0, #0
+MSR PMCCNTR_EL0, X0
+
+isb
+
+// Re-enable the PMU counters
+MRS X0, PMCR_EL0
+ORR X0, X0, #0x1
+MSR PMCR_EL0, X0
+
+*/
 #define RESET_PMC0(code)				\
 	{									\
-		OPCODE(code, MOV_ECX_DWORD(_MSR_IA32_PMC0, 0x00, 0x00, 0x00)); \
-		OPCODE(code, XOR_EAX_EAX());	\
-		OPCODE(code, XOR_EDX_EDX());	\
-		OPCODE(code, SERIALIZE());		\
-		OPCODE(code, WRMSR());			\
+		
 	}
+
+/*
+Puts value of counter into x1
+
+DSB SY
+isb
+
+MRS x1, PMCCNTR_EL0
+
+isb
+
+// Disable PMU (Optional?)
+MRS X0, PMCR_EL0
+BIC X0, X0, #0x1
+MSR PMCR_EL0, X0
+
+*/
+#define MEASURE_POST_CORE(code)			\
+{									\
+	
+}
 
 #endif /* __AARCH64_H */

@@ -1,3 +1,5 @@
+#ifdef __x86_64__
+
 #include "../include/msrdrv.h"
 
 static struct MsrInOut msr_start_l3[] = {
@@ -97,3 +99,4 @@ disable_counters (void)
 {
 	msrdrv_run (msr_stop, 2);
 }
+#endif
