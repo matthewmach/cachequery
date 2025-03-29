@@ -16,15 +16,25 @@
 #include <linux/sched.h>
 #include <linux/kobject.h>
 
+#ifdef __x86_64__
 #include "../include/msrdrv.h"
-#include "../include/parser.h"
+#elif __aarch64__
+#include "../include/msrdrv-aarch64.h"
+#endif
+
+#include "../config/settings.h"
 #include "../include/cache.h"
+#include "../include/cachequery.h"
 #include "../include/config.h"
 #include "../include/histogram.h"
 #include "../include/lists.h"
-#include "../include/cachequery.h"
+#include "../include/parser.h"
+
+#ifdef __x86_64__
 #include "../include/x86.h"
-#include "../config/settings.h"
+#elif __aarch64__
+#include "../include/aarch64.h"
+#endif
 
 // Static global vars
 static Config conf;
