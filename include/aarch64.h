@@ -16,42 +16,50 @@
 // rbx = general purpose, use x19? (when else is rbx used?)
 // rdi = rax = x0 (both first argument and return value)
 
+// for load rax, we use x10 now
+// thus wbinvd clears x10
+// move_rax still uses x0
+
 // all instructions iin little endian
 
-#define PUSH_RBP()			C(0xFD, 0x7B, 0x3F, 0xA9)   // stp X29, X30, [sp, #-16]
-#define MOV_RBP_RSP()		C(0xFD, 0x03, 0x00, 0x91)   // mov x29, sp
-#define PUSH_RBX()          C()
+
+#define PUSH_RBP()			C(0xFD, 0x7B, 0x3F, 0xA9)       // stp X29, X30, [sp, #-16]
+#define MOV_RBP_RSP()		C(0xFD, 0x03, 0x00, 0x91)       // mov x29, sp
+// #define PUSH_RBX()          C()
 
 // movk = {reg (0-5), imm16 (6-20), hw (21-22), opcode (23-30), sf (31)}
 // sf set to 1 for aarch64 
-
 #define LOAD_RAX(Q)         C((((Q) & 0x07) << 5) | 0xA, ((Q>>3) & 0xff), (((Q >> 11) & 0x1f) | 0x80), 0xF2, \          // movk x10, Q[0:15]
                               (((Q>>16) & 0x07) << 5) | 0xA, ((Q>>19) & 0xff), (((Q >> 27) & 0x1f) | 0xA0), 0xF2, \     // movk x10, Q[16:31], lsl #16
                               (((Q>>32) & 0x07) << 5) | 0xA, ((Q>>35) & 0xff), (((Q >> 43) & 0x1f) | 0xC0), 0xF2, \     // movk x10, Q[32:47], lsl #32
                               (((Q>>48) & 0x07) << 5) | 0xA, ((Q>>51) & 0xff), (((Q >> 59) & 0x1f) | 0xE0), 0xF2)       // movk x10, Q[48:63], lsl #48
+#define MOV_RAX_CT(Q)        C(((Q) & 0x07) << 5, ((Q>>3) & 0xff), (((Q >> 11) & 0x1f) | 0x80), 0xF2, \                 // movk x0, Q[0:15]
+                              ((Q>>16) & 0x07) << 5, ((Q>>19) & 0xff), (((Q >> 27) & 0x1f) | 0xA0), 0xF2, \             // movk x0, Q[16:31], lsl #16
+                              ((Q>>32) & 0x07) << 5, ((Q>>35) & 0xff), (((Q >> 43) & 0x1f) | 0xC0), 0xF2, \             // movk x0, Q[32:47], lsl #32
+                              ((Q>>48) & 0x07) << 5, ((Q>>51) & 0xff), (((Q >> 59) & 0x1f) | 0xE0), 0xF2)               // movk x0, Q[48:63], lsl #48
+#define WBINVD()            C(0x4A, 0x7E, 0x08, 0xD5)       // dc cisw, x10
 
-#define MOV_RAX_CT(Q)        C(((Q) & 0x07) << 5, ((Q>>3) & 0xff), (((Q >> 11) & 0x1f) | 0x80), 0xF2, \          // movk x0, Q[0:15]
-                              ((Q>>16) & 0x07) << 5, ((Q>>19) & 0xff), (((Q >> 27) & 0x1f) | 0xA0), 0xF2, \     // movk x0, Q[16:31], lsl #16
-                              ((Q>>32) & 0x07) << 5, ((Q>>35) & 0xff), (((Q >> 43) & 0x1f) | 0xC0), 0xF2, \     // movk x0, Q[32:47], lsl #32
-                              ((Q>>48) & 0x07) << 5, ((Q>>51) & 0xff), (((Q >> 59) & 0x1f) | 0xE0), 0xF2)       // movk x0, Q[48:63], lsl #48
-#define WBINVD()            C(0x4A, 0x7E, 0x08, 0xD5)     // dc cisw, x10
+#define CLFLUSH_RAX()       C(0x20, 0x7E, 0x0B, 0xD5)       // dc civac, x0
 
-#define CLFLUSH_RAX()       C(0x20, 0x7E, 0x0B, 0xD5)   // dc civac, x0
-
-#define XOR_RAX_RAX()       C(0x00, 0x00, 0x00, 0xCA)   // eor x0
+#define XOR_RAX_RAX()       C(0x00, 0x00, 0x00, 0xCA)       // eor x0
 
 
-#define CPUID()             C(0x9F, 0x3F, 0x03, 0xD5, \  // dsb sy
-                              0xDF, 0x3F, 0x03, 0xD5)   // isb
-#define MFENCE()			C(0x9F, 0x3F, 0x03, 0xD5)    // dsb sy
+#define CPUID()             C(0x9F, 0x3F, 0x03, 0xD5, \     // dsb sy
+                              0xDF, 0x3F, 0x03, 0xD5)       // isb
+#define MFENCE()			C(0x9F, 0x3F, 0x03, 0xD5)       // dsb sy
 
-#define POP_RBX()           C()
-#define POP_RBP()           C(0xFD, 0x7B, 0xC1, 0xA8)   // ldp x29, x30, [sp], 16
-#define RETQ()              C(0xC0, 0x03, 0x5F, 0xD6)   // ret
+// #define POP_RBX()           C()
+#define POP_RBP()           C(0xFD, 0x7B, 0xC1, 0xA8)       // ldp x29, x30, [sp], 16
+#define RETQ()              C(0xC0, 0x03, 0x5F, 0xD6)       // ret
+//#define MOV_RAX_RDI()
+#define MOVNTDQA_RAX()      C(0x20, 0x7E, 0x0B, 0xD5, \     // DC CIVAC, x0
+                              0x9F, 0x3F, 0x03, 0xD5, \     // DSB SY
+                              0xDF, 0x3F, 0x03, 0xD5, \     // ISB
+                              0x00, 0x00, 0x40, 0xF8)       // LDR x0, [x0]
 
 #define WBINVD()            C(0x4A, 0x7E, 0x08, 0xD5)   // dc cisw, x10
 
-#define SERIALIZE()		CPUID()
+#define SERIALIZE()		    CPUID()
 
 
 

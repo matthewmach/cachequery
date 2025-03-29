@@ -521,7 +521,7 @@ int calibrate (Block **set, int nsets, int ways, unsigned char measure_miss)
 	}
 
 	// ret diff (rax)
-	OPCODE(&code, MOV_RAX_RDI());
+	// OPCODE(&code, MOV_RAX_RDI());	// not needed as block is already in x0
 	// OPCODE(&code, POP_RBX());
 	OPCODE(&code, POP_RBP());
 	OPCODE(&code, RETQ());
