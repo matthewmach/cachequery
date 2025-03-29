@@ -383,7 +383,7 @@ int calibrate (Block **set, int nsets, int ways, unsigned char measure_miss)
 	// preamble
 	OPCODE(&code, PUSH_RBP());
 	OPCODE(&code, MOV_RBP_RSP());
-	OPCODE(&code, PUSH_RBX());
+	// OPCODE(&code, PUSH_RBX());
 
 	// flush block
 	OPCODE(&code, MOV_RAX_CT((unsigned long long)(set[s])));
@@ -512,7 +512,7 @@ int calibrate (Block **set, int nsets, int ways, unsigned char measure_miss)
 
 	// ret diff (rax)
 	OPCODE(&code, MOV_RAX_RDI());
-	OPCODE(&code, POP_RBX());
+	// OPCODE(&code, POP_RBX());
 	OPCODE(&code, POP_RBP());
 	OPCODE(&code, RETQ());
 

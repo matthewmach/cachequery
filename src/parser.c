@@ -340,14 +340,14 @@ int generate_code(lexer_state *lexer, unsigned int target_set, struct smart_buff
 	// Preamble
 	OPCODE(code, PUSH_RBP());
 	OPCODE(code, MOV_RBP_RSP());
-	OPCODE(code, PUSH_RBX());
+	// OPCODE(code, PUSH_RBX());
 
 	jmp_at = 15;
 	OPCODE(code, JMP_SHORT(jmp_at)); // skip error handler
 	// exception handler
 	error_label = code->len;
 	OPCODE(code, MOV_RAX_CT(err_code));
-	OPCODE(code, POP_RBX());
+	// OPCODE(code, POP_RBX());
 	OPCODE(code, POP_RBP());
 	OPCODE(code, RETQ());
 	// end-of-exception (total size: 2 + 10 + 1 + 1 + 1)
@@ -423,18 +423,20 @@ int generate_code(lexer_state *lexer, unsigned int target_set, struct smart_buff
 	while (tmp)
 	{
 		OPCODE(code, LOAD_RAX((unsigned long long)tmp));
-		OPCODE(code, SERIALIZE());
+		OPCODE(code, WBINVD());
 		OPCODE(code, LOAD_RAX((unsigned long long)tmp));
-		OPCODE(code, SERIALIZE());
+		OPCODE(code, WBINVD());
 		OPCODE(code, LOAD_RAX((unsigned long long)tmp));
-		OPCODE(code, SERIALIZE());
+		OPCODE(code, WBINVD());
 		tmp = tmp->next;
 	}
 	tmp = sets[s];
+	// flushing cache line by virtual address
 	while (tmp)
 	{
 		OPCODE(code, MOV_RAX_CT((unsigned long long)tmp));
 		OPCODE(code, CLFLUSH_RAX());
+		OPCODE(code, SERIALIZE());
 		tmp = tmp->next;
 	}
 	OPCODE(code, SERIALIZE());
@@ -457,8 +459,8 @@ int generate_code(lexer_state *lexer, unsigned int target_set, struct smart_buff
 		if (b->block.invalidate)
 		{
 			PRINT ("[debug] invalidate cache\n");
+			OPCODE(code, LOAD_RAX((unsigned long long)tmp));
 			OPCODE(code, WBINVD());
-			OPCODE(code, SERIALIZE());
 			goto cont;
 		}
 		// If a flush req
@@ -669,7 +671,7 @@ int generate_code(lexer_state *lexer, unsigned int target_set, struct smart_buff
 	}
 	// epilogue
 	OPCODE(code, MOV_RAX_RSI()); // ret value
-	OPCODE(code, POP_RBX());
+	// OPCODE(code, POP_RBX());
 	OPCODE(code, POP_RBP());
 	OPCODE(code, RETQ());
 

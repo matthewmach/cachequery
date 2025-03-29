@@ -25,10 +25,10 @@
 // movk = {reg (0-5), imm16 (6-20), hw (21-22), opcode (23-30), sf (31)}
 // sf set to 1 for aarch64 
 
-#define LOAD_RAX(Q)         C((((Q) & 0x07) << 5) | 0xA, ((Q>>3) & 0xff), (((Q >> 11) & 0x1f) | 0x80), 0xF2, \          // movk x0, Q[0:15]
-                              (((Q>>16) & 0x07) << 5) | 0xA, ((Q>>19) & 0xff), (((Q >> 27) & 0x1f) | 0xA0), 0xF2, \     // movk x0, Q[16:31], lsl #16
-                              (((Q>>32) & 0x07) << 5) | 0xA, ((Q>>35) & 0xff), (((Q >> 43) & 0x1f) | 0xC0), 0xF2, \     // movk x0, Q[32:47], lsl #32
-                              (((Q>>48) & 0x07) << 5) | 0xA, ((Q>>51) & 0xff), (((Q >> 59) & 0x1f) | 0xE0), 0xF2)       // movk x0, Q[48:63], lsl #48
+#define LOAD_RAX(Q)         C((((Q) & 0x07) << 5) | 0xA, ((Q>>3) & 0xff), (((Q >> 11) & 0x1f) | 0x80), 0xF2, \          // movk x10, Q[0:15]
+                              (((Q>>16) & 0x07) << 5) | 0xA, ((Q>>19) & 0xff), (((Q >> 27) & 0x1f) | 0xA0), 0xF2, \     // movk x10, Q[16:31], lsl #16
+                              (((Q>>32) & 0x07) << 5) | 0xA, ((Q>>35) & 0xff), (((Q >> 43) & 0x1f) | 0xC0), 0xF2, \     // movk x10, Q[32:47], lsl #32
+                              (((Q>>48) & 0x07) << 5) | 0xA, ((Q>>51) & 0xff), (((Q >> 59) & 0x1f) | 0xE0), 0xF2)       // movk x10, Q[48:63], lsl #48
 
 #define MOV_RAX_CT(Q)        C(((Q) & 0x07) << 5, ((Q>>3) & 0xff), (((Q >> 11) & 0x1f) | 0x80), 0xF2, \          // movk x0, Q[0:15]
                               ((Q>>16) & 0x07) << 5, ((Q>>19) & 0xff), (((Q >> 27) & 0x1f) | 0xA0), 0xF2, \     // movk x0, Q[16:31], lsl #16
@@ -49,7 +49,9 @@
 #define POP_RBP()           C(0xFD, 0x7B, 0xC1, 0xA8)   // ldp x29, x30, [sp], 16
 #define RETQ()              C(0xC0, 0x03, 0x5F, 0xD6)   // ret
 
-#define SERIALIZE()		MFENCE()
+#define WBINVD()            C(0x4A, 0x7E, 0x08, 0xD5)   // dc cisw, x10
+
+#define SERIALIZE()		CPUID()
 
 
 
