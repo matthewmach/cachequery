@@ -511,8 +511,13 @@ int generate_code(lexer_state *lexer, unsigned int target_set, struct smart_buff
 				// Read performance counters
 				// rdmsr PCM0
 				OPCODE(code, SERIALIZE());
+				#ifdef __x86_64__
 				OPCODE(code, MOV_ECX_DWORD(_MSR_IA32_PMC0, 0x00, 0x00, 0x00));
 				OPCODE(code, RDMSR());
+				#elif __aarch64__
+				OPCODE(code, MSR_PMSELR_EL0_X0());
+				OPCODE(code, MRS_X0_EVCNTR0());
+				#endif
 				if (!get_only_one_time(conf))
 				{
 					// if counter was increased

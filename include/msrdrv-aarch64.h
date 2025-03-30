@@ -32,7 +32,8 @@ struct MsrInOut {
 
 // PMU Control Register
 #define PMU_ENABLE BIT(0)
-#define PMU_RESET BIT(2)
+#define PMU_RESET_COUNTER BIT(1)
+#define PMU_RESET_CYCLE BIT(2)
 
 // Enable PMU Counters
 #define PMU_ENABLE_COUNTER_0 (1 << 0)
@@ -46,7 +47,9 @@ struct MsrInOut {
 #define L2D_CACHE_REFILL 0x17
 #define L3D_CACHE_REFILL 0x2A
 
+#define CPU_CYCLES 0x11
+
 void prepare_counters(int lvl);
 void disable_counters(void);
 
-#endif
+#endif /* __MSRDRV_AARCH64_H */

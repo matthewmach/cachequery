@@ -72,58 +72,91 @@ OPCODE(code, B(jmp_at));
 
 #define SERIALIZE()		    CPUID()
 
-// replace with pmu reset, not done
 #define MOV_ECX_DWORD(...)	C(0xb9, __VA_ARGS__)
 #define XOR_EAX_EAX()		C(0x31, 0xc0)
 #define XOR_EDX_EDX()		C(0x31, 0xd2)
 
+
+
+#define ISB()          C(0xDF, 0x3F, 0x03, 0xD5)   // isb
+
+#define MSR_EVCNTR0_X0() C(0x00, 0xE8, 0x1B, 0xD5) // msr PMEVCNTR0_EL0, x0
+#define MRS_X0_EVCNTR0() C(0x00, 0xE8, 0x3B, 0xD5) // mrs x0, PMEVCNTR0_EL0
+
+#define MSR_CCNTR_X0() C(0x00, 0x9D, 0x1B, 0xD5) // msr PMCCNTR_EL0, x0
+#define MRS_X0_CCNTR() C(0x00, 0x9D, 0x3B, 0xD5) // mrs x0, PMCCNTR_EL0
+
+#define MSR_PMSELR_EL0_X0() C(0xA0, 0x9C, 0x1B, 0xD5) // msr PMSELR_EL0, x0
+
 /*
-Reset the cycle counter
+Reset the PMU counter
 
-// Disable PMU
-MRS X0, PMCR_EL0
-BIC X0, X0, #0x1
-MSR PMCR_EL0, X0
-
-DSB SY
+dsb sy
 isb
 
-// Reset cycle counter
-MOV X0, #0
-MSR PMCCNTR_EL0, X0
+eor x0, x0, x0
+msr PMEVCNTR0_EL0, x0
 
 isb
-
-// Re-enable the PMU counters
-MRS X0, PMCR_EL0
-ORR X0, X0, #0x1
-MSR PMCR_EL0, X0
-
 */
-#define RESET_PMC0(code)				\
-	{									\
-		
+#define RESET_PMC0(code)						 \
+	{											 \
+		OPCODE(code, CPUID());					 \ 	// dsb sy; isb
+		OPCODE(code, XOR_RAX_RAX());			 \ 	// eor x0 x0 x0
+		OPCODE(code, MSR_EVCNTR0_X0()); 		 \ 	// msr PMEVCNTR0_EL0, x0
+		OPCODE(code, ISB());					 \ 	// isb
 	}
 
 /*
-Puts value of counter into x1
+Puts value of PMEVCNTR0_EL0 into x0
+Counter 0 should have been selected by now
 
-DSB SY
+dsb sy
 isb
 
-MRS x1, PMCCNTR_EL0
+mrs x0, PMEVCNTR0_EL0
 
 isb
-
-// Disable PMU (Optional?)
-MRS X0, PMCR_EL0
-BIC X0, X0, #0x1
-MSR PMCR_EL0, X0
 
 */
-#define MEASURE_POST_CORE(code)			\
-{									\
-	
-}
+#define MEASURE_POST_CORE(code)						\
+	{									    		\
+		OPCODE(code, CPUID());						\ 	// dsb sy; isb
+		OPCODE(code, MRS_X0_EVCNTR0()); 			\ 	// mrs x0, PMEVCNTR0_EL0
+		OPCODE(code, ISB());						\ 	// isb
+	}
+
+
+/*
+dsb sy
+isb
+
+eor x0, x0, x0
+msr PMCCNTR_EL0, x0
+
+isb
+*/
+#define MEASURE_PRE_TSC(code)					 \
+	{											 \
+		OPCODE(code, CPUID());					 \ // dsb sy; isb
+		OPCODE(code, XOR_RAX_RAX());			 \ // eor x0, x0, x0
+		OPCODE(code, MSR_CCNTR_X0()); 			 \ // msr PMCCNTR_EL0, x0
+		OPCODE(code, ISB());					 \ // isb
+	}
+
+/*
+dsb sy
+isb
+
+mrs x0, PMCCNTR_EL0
+
+isb
+*/
+#define MEASURE_POST_TSC(code)					 \
+	{											 \
+		OPCODE(code, CPUID());					 \ // dsb sy; isb
+		OPCODE(code, MRS_X0_CCNTR()); \ // mrs x0, PMCCNTR_EL0
+		OPCODE(code, ISB());				     \ // isb
+	}
 
 #endif /* __AARCH64_H */
