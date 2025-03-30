@@ -342,7 +342,7 @@ int generate_code(lexer_state *lexer, unsigned int target_set, struct smart_buff
 	OPCODE(code, MOV_RBP_RSP());
 	// OPCODE(code, PUSH_RBX());
 
-	jmp_at = 16;  // new size is 3 instructions * 4 bytes = 12 bytes + 4 bytes for the jump
+	jmp_at = 28;  // new size is (1 + 4 + 1 + 1 instructions) * 4 bytes = 28 bytes bytes for the jump
 	OPCODE(code, JMP_SHORT(jmp_at)); // skip error handler
 	// exception handler
 	error_label = code->len;
@@ -669,7 +669,7 @@ int generate_code(lexer_state *lexer, unsigned int target_set, struct smart_buff
 		b = b->next;
 	}
 	// epilogue
-	OPCODE(code, MOV_RAX_RSI()); // ret value
+	//OPCODE(code, MOV_RAX_RSI()); // ret value // not needed because we already store in x0?
 	// OPCODE(code, POP_RBX());
 	OPCODE(code, POP_RBP());
 	OPCODE(code, RETQ());
