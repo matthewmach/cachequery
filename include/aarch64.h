@@ -26,7 +26,7 @@
 #define PUSH_RBP()			C(0xFD, 0x7B, 0x3F, 0xA9)       // stp X29, X30, [sp, #-16]
 #define MOV_RBP_RSP()		C(0xFD, 0x03, 0x00, 0x91)       // mov x29, sp
 // #define PUSH_RBX()          C()
-
+#define XOR_RSI_RSI()       C(0x00, 0x00, 0x00, 0xCA)       // eor x0
 // movk = {reg (0-5), imm16 (6-20), hw (21-22), opcode (23-30), sf (31)}
 // sf set to 1 for aarch64 
 #define LOAD_RAX(Q)         C((((Q) & 0x07) << 5) | 0xA, ((Q>>3) & 0xff), (((Q >> 11) & 0x1f) | 0x80), 0xF2, \          // movk x10, Q[0:15]
@@ -43,25 +43,34 @@
 
 #define XOR_RAX_RAX()       C(0x00, 0x00, 0x00, 0xCA)       // eor x0
 
+// #define XOR_RDX_RDX()       C()
+// #define XOR_RDI_RDI()       C()
 
 #define CPUID()             C(0x9F, 0x3F, 0x03, 0xD5, \     // dsb sy
                               0xDF, 0x3F, 0x03, 0xD5)       // isb
+// #define LFENCE()
 #define MFENCE()			C(0x9F, 0x3F, 0x03, 0xD5)       // dsb sy
+// #define SFENCE()
+
+// #define RDPMC()
 
 // #define POP_RBX()           C()
 #define POP_RBP()           C(0xFD, 0x7B, 0xC1, 0xA8)       // ldp x29, x30, [sp], 16
 #define RETQ()              C(0xC0, 0x03, 0x5F, 0xD6)       // ret
 //#define MOV_RAX_RDI()
-#define MOVNTDQA_RAX()      C(0x20, 0x7E, 0x0B, 0xD5, \     // DC CIVAC, x0
-                              0x9F, 0x3F, 0x03, 0xD5, \     // DSB SY
-                              0xDF, 0x3F, 0x03, 0xD5, \     // ISB
-                              0x00, 0x00, 0x40, 0xF8)       // LDR x0, [x0]
+#define JMP_SHORT(_0) C((_0>> 2) & 0xFF, (_0 >> 10) & 0xFF, (_0 >> 18) & 0xFF, 0x14)
 
+jmp_at = 16;  // Jump over 12 bytes of handler + 4 bytes of jump instruction
+OPCODE(code, B(jmp_at));
+#define MOVNTDQA_RAX()      C(0x20, 0x7E, 0x0B, 0xD5, \     // dc civac, x0
+                              0x9F, 0x3F, 0x03, 0xD5, \     // dsb sy
+                              0xDF, 0x3F, 0x03, 0xD5, \     // isb
+                              0x00, 0x00, 0x40, 0xF8)       // ldr x0, [x0]
+// #define MOV_RAX_CR0()
+// #define MOV_CR0_RAX()
 #define WBINVD()            C(0x4A, 0x7E, 0x08, 0xD5)   // dc cisw, x10
 
 #define SERIALIZE()		    CPUID()
-
-
 
 // replace with pmu reset, not done
 #define MOV_ECX_DWORD(...)	C(0xb9, __VA_ARGS__)

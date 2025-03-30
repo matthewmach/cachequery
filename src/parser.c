@@ -342,7 +342,7 @@ int generate_code(lexer_state *lexer, unsigned int target_set, struct smart_buff
 	OPCODE(code, MOV_RBP_RSP());
 	// OPCODE(code, PUSH_RBX());
 
-	jmp_at = 15;
+	jmp_at = 16;  // new size is 3 instructions * 4 bytes = 12 bytes + 4 bytes for the jump
 	OPCODE(code, JMP_SHORT(jmp_at)); // skip error handler
 	// exception handler
 	error_label = code->len;
@@ -350,7 +350,6 @@ int generate_code(lexer_state *lexer, unsigned int target_set, struct smart_buff
 	// OPCODE(code, POP_RBX());
 	OPCODE(code, POP_RBP());
 	OPCODE(code, RETQ());
-	// end-of-exception (total size: 2 + 10 + 1 + 1 + 1)
 
 	OPCODE(code, XOR_RSI_RSI()); // set return value to zero
 
