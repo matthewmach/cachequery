@@ -3,14 +3,12 @@
 
 #include <inttypes.h>
 
-// TODO: Check if we need to zero out counter or does PMCR_EL0 reset handle it
-
 static struct MsrInOut msr_start_l3[] = {
     {.op = MSR_WRITE, .reg = PMSELR_EL0, .value = 0x00},
     {.op = MSR_WRITE,
      .reg = PMEVTYPER0_EL0,
      .value = (L3D_CACHE_REFILL | PMU_USER_EVENTS)},
-    {.op = MSR_WRITE, .reg = PMCNTENSET_EL0, .value = PMU_ENABLE_COUNTER_0},
+    {.op = MSR_WRITE, .reg = PMCNTENSET_EL0, .value = PMU_ENABLE_COUNTER_0 | PMU_ENABLE_CYCLE_COUNTER},
     {.op = MSR_STOP, .reg = 0x00, .value = 0x00},
 };
 
@@ -19,7 +17,7 @@ static struct MsrInOut msr_start_l2[] = {
     {.op = MSR_WRITE,
      .reg = PMEVTYPER0_EL0,
      .value = (L2D_CACHE_REFILL | PMU_USER_EVENTS)},
-    {.op = MSR_WRITE, .reg = PMCNTENSET_EL0, .value = PMU_ENABLE_COUNTER_0},
+    {.op = MSR_WRITE, .reg = PMCNTENSET_EL0, .value = PMU_ENABLE_COUNTER_0 | PMU_ENABLE_CYCLE_COUNTER},
     {.op = MSR_STOP, .reg = 0x00, .value = 0x00},
 };
 
@@ -28,18 +26,16 @@ static struct MsrInOut msr_start_l1[] = {
     {.op = MSR_WRITE,
      .reg = PMEVTYPER0_EL0,
      .value = (L1D_CACHE_REFILL | PMU_USER_EVENTS)},
-    {.op = MSR_WRITE, .reg = PMCNTENSET_EL0, .value = PMU_ENABLE_COUNTER_0},
+    {.op = MSR_WRITE, .reg = PMCNTENSET_EL0, .value = PMU_ENABLE_COUNTER_0 | PMU_ENABLE_CYCLE_COUNTER},
     {.op = MSR_STOP, .reg = 0x00, .value = 0x00},
 };
 
-// TODO: Check if we need to filter only to userspace cycles
 static struct MsrInOut msr_start_cycles[] = {
-    {.op = MSR_WRITE, .reg = PMCNTENSET_EL0, .value = PMU_ENABLE_CYCLE_COUNTER},
-    {.op = MSR_STOP, .reg = 0x00, .value = 0x00},
-};
-
-static struct MsrInOut msr_stop[] = {
-    // TODO: Check if anything needs to be done here
+    {.op = MSR_WRITE, .reg = PMSELR_EL0, .value = 0x00},
+    {.op = MSR_WRITE,
+        .reg = PMEVTYPER0_EL0,
+        .value = (CPU_CYCLES | PMU_USER_EVENTS)},
+    {.op = MSR_WRITE, .reg = PMCNTENSET_EL0, .value = PMU_ENABLE_COUNTER_0 | PMU_ENABLE_CYCLE_COUNTER},
     {.op = MSR_STOP, .reg = 0x00, .value = 0x00},
 };
 
@@ -102,13 +98,6 @@ inline void __attribute__((always_inline)) write_msr(enum MsrRegister reg,
     }
 }
 
-// static inline uint64_t __attribute__((always_inline)) pmu_get_cycle_counter()
-// {
-//     uint64_t c;
-//     __asm__ __volatile__("MRS %0, PMCCNTR_EL0" : "=r"(c));
-//     return c;
-// }
-
 long msrdrv_run(struct MsrInOut* msrops) {
     int i;
     for (i = 0;; i++) {
@@ -142,24 +131,21 @@ label_end:
     return 0;
 }
 
-void enable() {
+void enable_counters() {
     uint64_t val = read_msr(PMCR_EL0);
 
-    // Enable PMU in EL1
-    val |= PMU_ENABLE | PMU_RESET;
+    // Enable PMU in EL1 and reset counters
+    val |= PMU_ENABLE | PMU_RESET_COUNTER | PMU_RESET_CYCLE;
     write_msr(PMCR_EL0, val);
-}
 
-void disable() {
-    uint64_t val = read_msr(PMCR_EL0);
-
-    // Disable PMU in EL1
-    val &= ~PMU_ENABLE;
-    write_msr(PMCR_EL0, val);
+    // Enable cycle counter
+    val = read_msr(PMCNTENSET_EL0);
+    val |= PMU_ENABLE_CYCLE_COUNTER;
+    write_msr(PMCNTENSET_EL0, val);
 }
 
 void prepare_counters(int level) {
-    enable();
+    enable_counters();
     switch (level) {
         case 1:
             msrdrv_run(msr_start_l1);
@@ -177,7 +163,11 @@ void prepare_counters(int level) {
 }
 
 void disable_counters(void) {
-    msrdrv_run(msr_stop);
-    disable();
+    uint64_t val = read_msr(PMCR_EL0);
+
+    // Disable PMU in EL1
+    val &= ~PMU_ENABLE;
+    write_msr(PMCR_EL0, val);
 }
+
 #endif
