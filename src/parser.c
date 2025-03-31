@@ -3,7 +3,12 @@
 #include <linux/vmalloc.h>
 #include <linux/string.h>
 
+#ifdef __x86__
 #include "../include/x86.h"
+#elif __aarch64__
+#include "../include/aarch64.h"
+#endif 
+
 #include "../include/msrdrv.h"
 #include "../include/config.h"
 #include "../include/cache.h"
@@ -521,11 +526,16 @@ int generate_code(lexer_state *lexer, unsigned int target_set, struct smart_buff
 				if (!get_only_one_time(conf))
 				{
 					// if counter was increased
+					#ifdef __x86__
 					OPCODE(code, MOV_RDI_DWORD(0x01, 0x00, 0x00, 0x00));
 					OPCODE(code, CMP_EAX_EDI());
 					// update bit
 					OPCODE(code, CMOVAE_EAX_EDI());
 					OPCODE(code, SHL_RSI());
+
+					#elif __arch64__
+					
+					#endif
 				}
 				else
 				{

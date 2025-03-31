@@ -6,7 +6,7 @@
 // Definitions
 typedef struct config Config;
 
-enum Debug {DISABLED = 1, ENABLED = 2, VERBOSE = 3};
+enum Debug {DISABLED = 1, ENABLED = 2, VERB = 3};
 enum Serialization { LFENCE = 1, MFENCE = 2, CPUID = 3};
 
 struct conf_property {

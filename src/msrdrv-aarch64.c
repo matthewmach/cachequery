@@ -1,8 +1,6 @@
 #ifdef __aarch64__
 #include "../include/msrdrv-aarch64.h"
 
-#include <inttypes.h>
-
 static struct MsrInOut msr_start_l3[] = {
     {.op = MSR_WRITE, .reg = PMSELR_EL0, .value = 0x00},
     {.op = MSR_WRITE,
@@ -39,8 +37,8 @@ static struct MsrInOut msr_start_cycles[] = {
     {.op = MSR_STOP, .reg = 0x00, .value = 0x00},
 };
 
-inline uint64_t __attribute__((always_inline)) read_msr(enum MsrRegister reg) {
-    uint64_t result = 0;
+inline unsigned long long __attribute__((always_inline)) read_msr(enum MsrRegister reg) {
+    unsigned long long result = 0;
 
     switch (reg) {
         case PMCR_EL0:
@@ -131,8 +129,8 @@ label_end:
     return 0;
 }
 
-void enable_counters() {
-    uint64_t val = read_msr(PMCR_EL0);
+void enable_counters(void) {
+    unsigned long long val = read_msr(PMCR_EL0);
 
     // Enable PMU in EL1 and reset counters
     val |= PMU_ENABLE | PMU_RESET_COUNTER | PMU_RESET_CYCLE;
@@ -163,7 +161,7 @@ void prepare_counters(int level) {
 }
 
 void disable_counters(void) {
-    uint64_t val = read_msr(PMCR_EL0);
+    unsigned long long val = read_msr(PMCR_EL0);
 
     // Disable PMU in EL1
     val &= ~PMU_ENABLE;

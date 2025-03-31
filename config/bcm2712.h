@@ -38,3 +38,5 @@ https://developer.arm.com/documentation/100798/0401/L2-memory-system/About-the-L
 #define L1_SET_BITS 8       // log2(65536/64/4)
 #define L1_LINE_BITS 6
 #define L1_SLICE_BITS 0
+
+#define IS_LEADER_SET(x,s) (FALSE)
