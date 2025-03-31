@@ -347,7 +347,14 @@ int generate_code(lexer_state *lexer, unsigned int target_set, struct smart_buff
 	OPCODE(code, MOV_RBP_RSP());
 	// OPCODE(code, PUSH_RBX());
 
+	#ifdef __x86__ 
+	jmp_at = 15;
+	#else
 	jmp_at = 28;  // new size is (1 + 4 + 1 + 1 instructions) * 4 bytes = 28 bytes bytes for the jump
+	#endif
+
+	// int _check_len = code->len;
+
 	OPCODE(code, JMP_SHORT(jmp_at)); // skip error handler
 	// exception handler
 	error_label = code->len;
@@ -355,6 +362,8 @@ int generate_code(lexer_state *lexer, unsigned int target_set, struct smart_buff
 	// OPCODE(code, POP_RBX());
 	OPCODE(code, POP_RBP());
 	OPCODE(code, RETQ());
+
+	// assert(code->len - _check_len == 28);
 
 	OPCODE(code, XOR_RSI_RSI()); // set return value to zero
 
@@ -526,16 +535,11 @@ int generate_code(lexer_state *lexer, unsigned int target_set, struct smart_buff
 				if (!get_only_one_time(conf))
 				{
 					// if counter was increased
-					#ifdef __x86__
 					OPCODE(code, MOV_RDI_DWORD(0x01, 0x00, 0x00, 0x00));
 					OPCODE(code, CMP_EAX_EDI());
 					// update bit
 					OPCODE(code, CMOVAE_EAX_EDI());
 					OPCODE(code, SHL_RSI());
-
-					#elif __arch64__
-					
-					#endif
 				}
 				else
 				{
@@ -564,6 +568,7 @@ int generate_code(lexer_state *lexer, unsigned int target_set, struct smart_buff
 					OPCODE(code, MOV_RDI_DWORD(0x01, 0x00, 0x00, 0x00));
 					// if time less or equal than t_low goto err
 					OPCODE(code, CMP_RDX_CT(t_low));
+
 					jmp_at = error_label - code->len; // calc relative position
 					OPCODE(code, JBE_NEAR(jmp_at));
 					// if time above or equal than t_up set bit to 1

@@ -40,3 +40,10 @@ https://developer.arm.com/documentation/100798/0401/L2-memory-system/About-the-L
 #define L1_SLICE_BITS 0
 
 #define IS_LEADER_SET(x,s) (FALSE)
+
+#define L3_HIT_THRESHOLD 0
+#define L3_MISS_THRESHOLD 0
+#define L2_HIT_THRESHOLD 0
+#define L2_MISS_THRESHOLD 0
+#define L1_HIT_THRESHOLD 0
+#define L1_MISS_THRESHOLD 0
