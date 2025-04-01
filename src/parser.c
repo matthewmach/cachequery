@@ -3,6 +3,8 @@
 #include <linux/vmalloc.h>
 #include <linux/string.h>
 
+#include <linux/moduleloader.h>
+
 #ifdef __x86__
 #include "../include/x86.h"
 #elif __aarch64__
@@ -219,7 +221,7 @@ void* allocate_code_pages(struct smart_buffer *code, Block **sets, unsigned char
 
 alloc:
 	count++;
-	if (!(ret = __vmalloc (pages*PAGE_SIZE, GFP_KERNEL)))
+	if (!(ret = module_alloc(pages*PAGE_SIZE)))
 	{
 		return NULL;
 	}

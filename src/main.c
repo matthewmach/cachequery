@@ -408,6 +408,7 @@ int calibrate (Block **set, int nsets, int ways, unsigned char measure_miss)
 	PRINT ("[debug] load %p:\ts1=%d\ts2=%d\ts3=%d\th=%d\n",
 			set[s], set[s]->set1, set[s]->set2, set[s]->set3, set[s]->slice);
 
+	PRINT("REACHED HERE 1");
 	// evict block from L1 and LFB
 	if (set[s]->evict1_sz > 0)
 	{
@@ -418,7 +419,7 @@ int calibrate (Block **set, int nsets, int ways, unsigned char measure_miss)
 			{
 				OPCODE(&code, LOAD_RAX((unsigned long long)(evict1[i])));
 				OPCODE(&code, SERIALIZE());
-				WPRINT("\teset1: %p\ts1=%d\ts2=%d\ts3=%d\th=%d\n", evict1[i], evict1[i]->set1, evict1[i]->set2, evict1[i]->set3, evict1[i]->slice);
+				PRINT("\teset1: %p\ts1=%d\ts2=%d\ts3=%d\th=%d\n", evict1[i], evict1[i]->set1, evict1[i]->set2, evict1[i]->set3, evict1[i]->slice);
 				w1 += 1;
 			}
 		}
@@ -432,7 +433,7 @@ int calibrate (Block **set, int nsets, int ways, unsigned char measure_miss)
 //					OPCODE(code, LOAD_RAX((unsigned long long)(evict1[i])));
 					OPCODE(&code, MOV_RAX_CT((unsigned long long)(evict1[i]))); // move pointer to rax
 					OPCODE (&code, MOVNTDQA_RAX()); // movntqda xmm1, [rax]
-					WPRINT("\tlfb: %p\ts1=%d\ts2=%d\ts3=%d\th=%d\n", evict1[i], evict1[i]->set1, evict1[i]->set2, evict1[i]->set3, evict1[i]->slice);
+					PRINT("\tlfb: %p\ts1=%d\ts2=%d\ts3=%d\th=%d\n", evict1[i], evict1[i]->set1, evict1[i]->set2, evict1[i]->set3, evict1[i]->slice);
 					w1 += 1;
 				}
 
@@ -440,6 +441,9 @@ int calibrate (Block **set, int nsets, int ways, unsigned char measure_miss)
 			OPCODE(&code, SERIALIZE());
 		}
 	}
+
+
+	PRINT("REACHED HERE 2");
 
 	// evict block from L2 and SQ
 	if (set[s]->evict2_sz > 0)
@@ -450,7 +454,7 @@ int calibrate (Block **set, int nsets, int ways, unsigned char measure_miss)
 			{
 				OPCODE(&code, LOAD_RAX((unsigned long long)(evict2[i])));
 				OPCODE(&code, SERIALIZE());
-				WPRINT("\teset2: %p\ts1=%d\ts2=%d\ts3=%d\th=%d\n", evict2[i], evict2[i]->set1, evict2[i]->set2, evict2[i]->set3, evict2[i]->slice);
+				PRINT("\teset2: %p\ts1=%d\ts2=%d\ts3=%d\th=%d\n", evict2[i], evict2[i]->set1, evict2[i]->set2, evict2[i]->set3, evict2[i]->slice);
 				w2 += 1;
 			}
 		}
@@ -461,12 +465,14 @@ int calibrate (Block **set, int nsets, int ways, unsigned char measure_miss)
 //				OPCODE(code, LOAD_RAX((unsigned long long)(evict2[i])));
 				OPCODE(&code, MOV_RAX_CT((unsigned long long)(evict2[i]))); // move pointer to rax
 				OPCODE (&code, MOVNTDQA_RAX()); // movntqda xmm1, [rax]
-				WPRINT("\tsq: %p\ts1=%d\ts2=%d\ts3=%d\th=%d\n", evict2[i], evict2[i]->set1, evict2[i]->set2, evict2[i]->set3, evict2[i]->slice);
+				PRINT("\tsq: %p\ts1=%d\ts2=%d\ts3=%d\th=%d\n", evict2[i], evict2[i]->set1, evict2[i]->set2, evict2[i]->set3, evict2[i]->slice);
 				w2 += 1;
 			}
 		}
 		OPCODE(&code, SERIALIZE());
 	}
+
+	PRINT("REACHED HERE 3");
 
 	if (measure_miss)
 	{
@@ -480,12 +486,14 @@ int calibrate (Block **set, int nsets, int ways, unsigned char measure_miss)
 			{
 				OPCODE(&code, LOAD_RAX((unsigned long long)(evict)));
 				OPCODE(&code, SERIALIZE());
-				WPRINT("\teset: %p\ts1=%d\ts2=%d\ts3=%d\th=%d\n", evict, evict->set1, evict->set2, evict->set3, evict->slice);
+				PRINT("\teset: %p\ts1=%d\ts2=%d\ts3=%d\th=%d\n", evict, evict->set1, evict->set2, evict->set3, evict->slice);
 				c += 1;
 			}
 			evict = evict->next;
 		}
 	}
+
+	PRINT("REACHED HERE 4");
 
 	// refresh address TLB if L2 or L3
 	if (get_tlb_preload(&conf) && set[s]->evict1_sz > 0)
@@ -498,19 +506,22 @@ int calibrate (Block **set, int nsets, int ways, unsigned char measure_miss)
 		OPCODE(&code, SERIALIZE());
 	}
 
+	PRINT("REACHED HERE 5");
+
 	if (get_core_cycles(&conf))
 	{
 		RESET_PMC0(&code);
-
+		
 	}
 	else
 	{
 		MEASURE_PRE_TSC(&code);
 	}
-
+	
+	
 	// Access block
 	OPCODE(&code, LOAD_RAX((unsigned long long)(set[s])));
-
+	
 	if (get_core_cycles(&conf))
 	{
 		MEASURE_POST_CORE(&code);
@@ -519,16 +530,26 @@ int calibrate (Block **set, int nsets, int ways, unsigned char measure_miss)
 	{
 		MEASURE_POST_TSC(&code);
 	}
-
+	PRINT("REACHED HERE 6");
+	
 	// ret diff (rax)
 	OPCODE(&code, MOV_RAX_RDI());
 	// OPCODE(&code, POP_RBX());
 	OPCODE(&code, POP_RBP());
 	OPCODE(&code, RETQ());
+	
+	PRINT("REACHED HERE 7 %zu\n", code.len);
+
+	for (int i = 0; i < code.len; ++i) {
+		PRINT("%02X", code.start[i] & 0xff);
+	}
+
+	PRINT("\nEND\n");
 
 	// warm
 	run = (unsigned long long(*)(void))(code.start);
 	run ();
+	PRINT("REACHED HERE 8");
 
 	for (i=0, kk=0; i<get_num_calibrations(&conf); i++)
 	{
@@ -562,6 +583,8 @@ int calibrate (Block **set, int nsets, int ways, unsigned char measure_miss)
 			kk++;
 		}
 	}
+	PRINT("REACHED HERE 9");
+
 	print_hist (cal);
 	t_val = get_min (cal);
 
@@ -611,6 +634,8 @@ ssize_t val_show(struct cacheset_obj *kobj, char *out, Block **sets, size_t set_
 		}
 	}
 
+	PRINT("REACHED HERE 10!");
+
 	// Fix ptr to generated code
 	run = (unsigned long long(*)(void))code->start;
 
@@ -620,6 +645,8 @@ ssize_t val_show(struct cacheset_obj *kobj, char *out, Block **sets, size_t set_
 
 	// warmup code
 	run();
+
+	PRINT("REACHED HERE 11!");
 
 	for (rep = 0, fails = 0; rep < num_repetitions && fails < num_repetitions; rep++)
 	{
